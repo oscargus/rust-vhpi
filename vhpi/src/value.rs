@@ -9,7 +9,7 @@ use crate::Time;
 use std::fmt;
 use std::mem::size_of;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Value {
     BinStr(String),
     OctStr(String),
@@ -290,6 +290,36 @@ enum VectorBox {
     SmallPhys(Vec<vhpi_sys::vhpiSmallPhysT>),
     #[allow(dead_code)]
     Phys(Vec<vhpi_sys::vhpiPhysT>),
+}
+
+impl VectorBox {
+    fn len(&self) -> usize {
+        match self {
+            VectorBox::Enum(values) => values.len(),
+            VectorBox::Int(values) => values.len(),
+            VectorBox::Real(values) => values.len(),
+            VectorBox::Time(values) => values.len(),
+            VectorBox::SmallEnum(values) => values.len(),
+            VectorBox::LongInt(values) => values.len(),
+            VectorBox::SmallPhys(values) => values.len(),
+            VectorBox::Phys(values) => values.len(),
+        }
+    }
+
+    fn byte_len(&self) -> usize {
+        match self {
+            VectorBox::Enum(values) => values.len() * size_of::<vhpi_sys::vhpiEnumT>(),
+            VectorBox::Int(values) => values.len() * size_of::<vhpi_sys::vhpiIntT>(),
+            VectorBox::Real(values) => values.len() * size_of::<vhpi_sys::vhpiRealT>(),
+            VectorBox::Time(values) => values.len() * size_of::<vhpi_sys::vhpiTimeT>(),
+            VectorBox::SmallEnum(values) => {
+                values.len() * size_of::<vhpi_sys::vhpiSmallEnumT>()
+            }
+            VectorBox::LongInt(values) => values.len() * size_of::<vhpi_sys::vhpiLongIntT>(),
+            VectorBox::SmallPhys(values) => values.len() * size_of::<vhpi_sys::vhpiSmallPhysT>(),
+            VectorBox::Phys(values) => values.len() * size_of::<vhpi_sys::vhpiPhysT>(),
+        }
+    }
 }
 
 impl Handle {
@@ -675,13 +705,24 @@ impl Handle {
             value: val,
         };
 
+        if let Some(buffer) = buffer_holder.as_ref() {
+            val_struct.bufSize = buffer
+                .byte_len()
+                .try_into()
+                .expect("vector buffer byte length does not fit into vhpi buffer size type");
+            val_struct.numElems = buffer
+                .len()
+                .try_into()
+                .expect("vector element count does not fit into vhpi element count type");
+        }
+
         let rc =
             unsafe { vhpi_sys::vhpi_put_value(self.as_raw(), &raw mut val_struct, mode.into()) };
 
         // Keep buffer_holder alive until after vhpi_put_value
         let _ = &buffer_holder;
 
-        if rc < 0 {
+        if rc != 0 {
             return Err(
                 crate::check_error().unwrap_or_else(|| "Unknown error in vhpi_put_value".into())
             );

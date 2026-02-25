@@ -1,5 +1,5 @@
 [workspace]
-members = ["vhpi-sys", "vhpi", "dumper"]
+members = ["vhpi-sys", "vhpi", "dumper", "tests/test_simple"]
 resolver = "2"
 
 [workspace.package]

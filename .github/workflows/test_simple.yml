@@ -1,4 +1,4 @@
-name: Run dumper example
+name: Run test_simple example
 on: [push, pull_request]
 
 jobs:
@@ -13,5 +13,10 @@ jobs:
       - uses: nickg/setup-nvc@v1
         with:
           version: latest
-      - name: Run VHPI+nvc matrix checks
-        run: ./scripts/run_vhpi_nvc_checks.sh --plugin dumper
+      - name: Run test_simple against tb_simple
+        run: |
+          ./scripts/run_vhpi_nvc_checks.sh \
+            --plugin test_simple \
+            --test tb_simple \
+            --expect 'test_simple plugin loaded' \
+            --expect 'test_simple: all 6 checkpoints passed'
