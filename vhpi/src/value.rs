@@ -188,7 +188,7 @@ pub enum Format {
     PhysicalVec,
     Time,
     TimeVec,
-    Unknown(u32),
+    Unknown(i32),
 }
 
 impl From<vhpi_sys::vhpiSeverityT> for Format {

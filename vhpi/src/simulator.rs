@@ -2,7 +2,7 @@ use crate::{IntProperty, OneToOne, PhysProperty, StrProperty, Time};
 
 bitflags::bitflags! {
 #[derive(Debug)]
-    pub struct Provides: u32 {
+    pub struct Provides: i32 {
         const HIERARCHY  = vhpi_sys::vhpiCapabibilityT_vhpiProvidesHierarchy;
         const STATIC_ACCESS = vhpi_sys::vhpiCapabibilityT_vhpiProvidesStaticAccess;
         const CONNECTIVITY = vhpi_sys::vhpiCapabibilityT_vhpiProvidesConnectivity;
@@ -19,9 +19,9 @@ bitflags::bitflags! {
 
 #[must_use]
 pub fn simulator_capabilities() -> Provides {
-    let tool_handle = unsafe { vhpi_sys::vhpi_handle(OneToOne::Tool as u32, std::ptr::null_mut()) };
-    let caps = unsafe { vhpi_sys::vhpi_get(IntProperty::Capabilities as u32, tool_handle) };
-    Provides::from_bits(caps as u32)
+    let tool_handle = unsafe { vhpi_sys::vhpi_handle(OneToOne::Tool as i32, std::ptr::null_mut()) };
+    let caps = unsafe { vhpi_sys::vhpi_get(IntProperty::Capabilities as i32, tool_handle) };
+    Provides::from_bits(caps as i32)
         .unwrap_or_else(|| panic!("Invalid capabilities bitmask: {caps:#010x}",))
 }
 

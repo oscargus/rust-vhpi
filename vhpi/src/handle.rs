@@ -5,7 +5,7 @@ use vhpi_sys::{
     vhpi_iterator, vhpi_release_handle, vhpi_scan,
 };
 
-#[repr(u32)]
+#[repr(i32)]
 pub enum OneToOne {
     RootInst = vhpi_sys::vhpiOneToOneT_vhpiRootInst,
     AbstractLiteral = vhpi_sys::vhpiOneToOneT_vhpiAbstractLiteral,
@@ -88,7 +88,7 @@ pub enum OneToOne {
     GenIndex = vhpi_sys::vhpiOneToOneT_vhpiGenIndex,
 }
 
-#[repr(u32)]
+#[repr(i32)]
 pub enum OneToMany {
     Decls = vhpi_sys::vhpiOneToManyT_vhpiDecls,
     SigDecls = vhpi_sys::vhpiOneToManyT_vhpiSigDecls,
@@ -212,7 +212,7 @@ impl Handle {
 
     #[must_use]
     pub fn handle(&self, property: OneToOne) -> Handle {
-        Handle::from_raw(unsafe { vhpi_handle(property as u32, self.as_raw()) })
+        Handle::from_raw(unsafe { vhpi_handle(property as i32, self.as_raw()) })
     }
 
     #[must_use]
@@ -228,7 +228,7 @@ impl Handle {
 
     #[must_use]
     pub fn handle_by_index(&self, property: OneToMany, index: i32) -> Option<Handle> {
-        let handle = unsafe { vhpi_handle_by_index(property as u32, self.as_raw(), index) };
+        let handle = unsafe { vhpi_handle_by_index(property as i32, self.as_raw(), index) };
         if handle.is_null() {
             None
         } else {
@@ -238,7 +238,7 @@ impl Handle {
 
     #[must_use]
     pub fn iterator(&self, typ: OneToMany) -> HandleIterator {
-        let raw = unsafe { vhpi_iterator(typ as u32, self.as_raw()) };
+        let raw = unsafe { vhpi_iterator(typ as i32, self.as_raw()) };
         HandleIterator {
             iter: Handle::from_raw(raw),
         }
@@ -267,7 +267,7 @@ impl Iterator for HandleIterator {
 
 #[must_use]
 pub fn handle(property: OneToOne) -> Handle {
-    Handle::from_raw(unsafe { vhpi_handle(property as u32, std::ptr::null_mut()) })
+    Handle::from_raw(unsafe { vhpi_handle(property as i32, std::ptr::null_mut()) })
 }
 
 #[must_use]

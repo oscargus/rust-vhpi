@@ -102,7 +102,7 @@ pub fn get_cycles() -> i64 {
     let mut cycles = 0;
     unsafe { vhpi_sys::vhpi_get_time(std::ptr::null_mut(), &raw mut cycles) };
 
-    cycles
+    cycles.into()
 }
 
 #[must_use]

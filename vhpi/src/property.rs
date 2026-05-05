@@ -5,7 +5,7 @@ use vhpi_sys::{vhpi_get, vhpi_get_str, vhpi_iterator, vhpi_scan};
 
 use crate::{iso8859_1_cstr_to_string, Handle, Physical};
 
-#[repr(u32)]
+#[repr(i32)]
 pub enum StrProperty {
     Name = vhpi_sys::vhpiStrPropertyT_vhpiNameP,
     FullName = vhpi_sys::vhpiStrPropertyT_vhpiFullNameP,
@@ -30,7 +30,7 @@ pub enum StrProperty {
     SpecName = vhpi_sys::vhpiStrPropertyT_vhpiSpecNameP,
 }
 
-#[repr(u32)]
+#[repr(i32)]
 pub enum IntProperty {
     Kind = vhpi_sys::vhpiIntPropertyT_vhpiKindP,
     Access = vhpi_sys::vhpiIntPropertyT_vhpiAccessP,
@@ -109,7 +109,7 @@ pub enum IntProperty {
     RandomSeed = vhpi_sys::vhpiIntPropertyT_vhpiRandomSeedP,
 }
 
-#[repr(u32)]
+#[repr(i32)]
 #[derive(Debug, FromPrimitive, PartialEq)]
 pub enum RealProperty {
     FloatLeftBound = vhpi_sys::vhpiRealPropertyT_vhpiFloatLeftBoundP,
@@ -117,7 +117,7 @@ pub enum RealProperty {
     RealVal = vhpi_sys::vhpiRealPropertyT_vhpiRealValP,
 }
 
-#[repr(u32)]
+#[repr(i32)]
 #[derive(Debug, FromPrimitive, PartialEq)]
 pub enum PhysProperty {
     PhysLeftBound = vhpi_sys::vhpiPhysPropertyT_vhpiPhysLeftBoundP,
@@ -128,7 +128,7 @@ pub enum PhysProperty {
     ResolutionLimit = vhpi_sys::vhpiPhysPropertyT_vhpiResolutionLimitP,
 }
 
-#[repr(u32)]
+#[repr(i32)]
 #[derive(Debug, FromPrimitive, PartialEq)]
 pub enum ClassKind {
     AccessTypeDecl = vhpi_sys::vhpiClassKindT_vhpiAccessTypeDeclK,
@@ -258,12 +258,12 @@ impl ClassKind {
 impl Handle {
     #[must_use]
     pub fn get(&self, property: IntProperty) -> i32 {
-        unsafe { vhpi_get(property as u32, self.as_raw()) }
+        unsafe { vhpi_get(property as i32, self.as_raw()) }
     }
 
     #[must_use]
     pub fn get_str(&self, property: StrProperty) -> Option<String> {
-        let ptr = unsafe { vhpi_get_str(property as u32, self.as_raw()) };
+        let ptr = unsafe { vhpi_get_str(property as i32, self.as_raw()) };
         if ptr.is_null() {
             return None;
         }
@@ -274,13 +274,13 @@ impl Handle {
 
     #[must_use]
     pub fn get_phys(&self, property: PhysProperty) -> Physical {
-        let result = unsafe { vhpi_sys::vhpi_get_phys(property as u32, self.as_raw()) };
+        let result = unsafe { vhpi_sys::vhpi_get_phys(property as i32, self.as_raw()) };
         result.into()
     }
 
     #[must_use]
     pub fn get_real(&self, property: RealProperty) -> f64 {
-        unsafe { vhpi_sys::vhpi_get_real(property as u32, self.as_raw()) }
+        unsafe { vhpi_sys::vhpi_get_real(property as i32, self.as_raw()) }
     }
 
     // The following are convenience functions not defined by VHPI
@@ -303,7 +303,7 @@ impl Handle {
 
     #[must_use]
     pub fn index_range(&self) -> Box<dyn Iterator<Item = i32>> {
-        let raw = unsafe { vhpi_iterator(crate::OneToMany::Constraints as u32, self.as_raw()) };
+        let raw = unsafe { vhpi_iterator(crate::OneToMany::Constraints as i32, self.as_raw()) };
         let handle = Handle::from_raw(unsafe { vhpi_scan(raw) });
         let is_up = handle.get(IntProperty::IsUp);
         let left = handle.get(IntProperty::LeftBound);
