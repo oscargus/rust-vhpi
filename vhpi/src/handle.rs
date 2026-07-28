@@ -352,6 +352,7 @@ impl Handle {
         self.handle.is_null()
     }
 
+    #[must_use]
     pub fn as_raw(&self) -> vhpiHandleT {
         self.handle
     }
