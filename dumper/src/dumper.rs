@@ -63,9 +63,9 @@ fn value_change(data: &vhpi::CbData) {
 }
 
 fn walk_region(region: &vhpi::Handle) {
-    region
-        .get_kind()
-        .map(|kind| vhpi::printf!("region {} ({:?})", region.get_name().unwrap(), kind));
+    if let Some(kind) = region.get_kind() {
+        vhpi::printf!("region {} ({:?})", region.get_name().unwrap(), kind);
+    }
     for port in region.iterator(vhpi::OneToMany::PortDecls) {
         println!(
             "port {} ({:?}, type {}, {:?})",

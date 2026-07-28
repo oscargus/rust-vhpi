@@ -7,18 +7,18 @@ use crate::Value;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BitVal {
     /// Logic 0.
-    Zero = vhpi_sys::vhpibit0 as u32,
+    Zero = vhpi_sys::vhpibit0,
     /// Logic 1.
-    One = vhpi_sys::vhpibit1 as u32,
+    One = vhpi_sys::vhpibit1,
 }
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BooleanVal {
     /// Logic false.
-    False = vhpi_sys::vhpiFalse as u32,
+    False = vhpi_sys::vhpiFalse,
     /// Logic true.
-    True = vhpi_sys::vhpiTrue as u32,
+    True = vhpi_sys::vhpiTrue,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -230,27 +230,32 @@ impl LogicVec {
     }
 
     /// Returns a vector of bytes representing the VCD value of this `LogicVec`.
+    #[must_use]
     pub fn as_vcd_value(&self) -> Vec<u8> {
-        let mut vcd_value = self.data.iter().map(|val| u8::from(*val)).collect::<Vec<u8>>();
-        // Remove leading x from the VCD value representation, but keep the last x.
-        while vcd_value.first() == Some(&b'x') && vcd_value.len() > 1 {
-            if vcd_value.iter().nth(1) == Some(&b'x') {
-                vcd_value.remove(0);
-            } else {
-                break;
-            }
+        let len = self.data.len();
+        let thresh = len - 1;
+        let mut skip = 0;
+
+        // Collapse redundant leading X values while preserving one leading X.
+        while skip < thresh && self.data[skip] == LogicVal::X && self.data[skip + 1] == LogicVal::X
+        {
+            skip += 1;
         }
-        while vcd_value.first() == Some(&b'z') && vcd_value.len() > 1 {
-            if vcd_value.iter().nth(1) == Some(&b'z') {
-                vcd_value.remove(0);
-            } else {
-                break;
-            }
+
+        // Collapse redundant leading Z values while preserving one leading Z.
+        while skip < thresh && self.data[skip] == LogicVal::Z && self.data[skip + 1] == LogicVal::Z
+        {
+            skip += 1;
         }
-        // Remove leading zeros from the VCD value representation.
-        while vcd_value.first() == Some(&b'0') && vcd_value.len() > 1 {
-             vcd_value.remove(0);
+
+        // Trim leading zeros, but always preserve at least one digit.
+        while skip < thresh && self.data[skip] == LogicVal::Zero {
+            skip += 1;
         }
+
+        let mut vcd_value = Vec::with_capacity(len.saturating_sub(skip) + 1);
+        vcd_value.push(b'b');
+        vcd_value.extend(self.data[skip..].iter().map(|val| u8::from(*val)));
 
         vcd_value
     }
@@ -522,35 +527,35 @@ mod tests {
     fn logic_vec_as_vcd_value_trims_leading_zeros() {
         let value = LogicVec::from("000101");
 
-        assert_eq!(value.as_vcd_value(), b"101");
+        assert_eq!(value.as_vcd_value(), b"b101");
     }
 
     #[test]
     fn logic_vec_as_vcd_value_keeps_single_zero() {
         let value = LogicVec::from("0000");
 
-        assert_eq!(value.as_vcd_value(), b"0");
+        assert_eq!(value.as_vcd_value(), b"b0");
     }
 
     #[test]
     fn logic_vec_as_vcd_value_trims_redundant_leading_x() {
         let value = LogicVec::from("xxxx1");
 
-        assert_eq!(value.as_vcd_value(), b"x1");
+        assert_eq!(value.as_vcd_value(), b"bx1");
     }
 
     #[test]
     fn logic_vec_as_vcd_value_trims_redundant_leading_z() {
         let value = LogicVec::from("zzzz0");
 
-        assert_eq!(value.as_vcd_value(), b"z0");
+        assert_eq!(value.as_vcd_value(), b"bz0");
     }
 
     #[test]
     fn logic_vec_as_vcd_value_does_not_trim_mixed_unknown_prefixes() {
         let value = LogicVec::from("xxz1");
 
-        assert_eq!(value.as_vcd_value(), b"xz1");
+        assert_eq!(value.as_vcd_value(), b"bxz1");
     }
 
     #[test]

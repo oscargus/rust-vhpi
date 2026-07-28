@@ -119,6 +119,7 @@ pub enum CbReason {
 }
 
 impl CbReason {
+    #[must_use]
     pub fn from_u32(value: u32) -> Self {
         num_traits::FromPrimitive::from_u32(value).unwrap_or(CbReason::Unknown)
     }
